@@ -1,0 +1,81 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+/android/app/.cxx
+
+android/app/src/development/google-services.json
+android/app/src/production/google-services.json
+android/app/src/staging/google-services.json
+
+ios/config/development/GoogleService-Info.plist
+ios/config/staging/GoogleService-Info.plist
+ios/config/production/GoogleService-Info.plist
+
+ios/Runner/Firebase/development/GoogleService-Info-development.plist
+ios/Runner/Firebase/staging/GoogleService-Info-staging.plist
+ios/Runner/Firebase/production/GoogleService-Info-production.plist
+
+ios/Runner/Firebase/development/*
+ios/Runner/Firebase/staging/*
+ios/Runner/Firebase/production/*
+
+*.freezed.dart
+*.config.dart
+*.gr.dart
+*.g.dart
+
+apple-app-site-association.json
+assetlinks.json
+
+
+**/GoogleService-Info.plist
+ios/config/**/GoogleService-Info.plist
+
+*.env
+global-menu-hub/
+.docs/
+.mcp.json
