@@ -98,7 +98,7 @@ main.dart
 - Flutter stable
 - Dart SDK compatible with `^3.9.2`
 - Xcode for iOS builds
-- Android Studio or Android SDK for Android builds
+- Android SDK for Android builds
 
 ### Install Dependencies
 
