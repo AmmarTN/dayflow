@@ -13,6 +13,7 @@ class TaskModel with _$TaskModel {
     String? subtitle,
     String? category,
     String? scheduledTime,
+    String? reminderType,
   }) = _TaskModel;
 
   factory TaskModel.fromJson(Map<String, dynamic> json) =>

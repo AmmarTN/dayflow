@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dayflow/core/services/notification_service.dart';
 import 'package:dayflow/core/usecases/tasks/get_tasks.dart';
 import 'package:dayflow/core/usecases/tasks/save_tasks.dart';
 import 'package:dayflow/core/usecases/usecase.dart';
@@ -12,8 +13,9 @@ import 'tasks_state.dart';
 class TasksCubit extends Cubit<TasksState> {
   final GetTasks _getTasks;
   final SaveTasks _saveTasks;
+  final NotificationService _notificationService;
 
-  TasksCubit(this._getTasks, this._saveTasks)
+  TasksCubit(this._getTasks, this._saveTasks, this._notificationService)
       : super(TasksState(selectedDate: _dateOnly(DateTime.now())));
 
   static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
@@ -39,17 +41,25 @@ class TasksCubit extends Cubit<TasksState> {
           errorMsg: failure.getMessage(),
         ),
       )),
-      (tasks) => emit(state.copyWith(
-        tasks: tasks,
-        status: const CubitStatus(
-          statusType: CubitStatusType.success,
-          action: CubitAction.loadTasks,
-        ),
-      )),
+      (tasks) {
+        emit(state.copyWith(
+          tasks: tasks,
+          status: const CubitStatus(
+            statusType: CubitStatusType.success,
+            action: CubitAction.loadTasks,
+          ),
+        ));
+      },
     );
   }
 
-  Future<void> addTask(String title, {String? subtitle, DateTime? date, String? scheduledTime}) async {
+  Future<void> addTask(
+    String title, {
+    String? subtitle,
+    DateTime? date,
+    String? scheduledTime,
+    String? reminderType,
+  }) async {
     emit(state.copyWith(
       status: const CubitStatus(
         statusType: CubitStatusType.loading,
@@ -64,6 +74,7 @@ class TasksCubit extends Cubit<TasksState> {
       subtitle: subtitle,
       createdAt: taskDate,
       scheduledTime: scheduledTime,
+      reminderType: reminderType,
     );
 
     final updatedTasks = [task, ...state.tasks];
@@ -76,17 +87,27 @@ class TasksCubit extends Cubit<TasksState> {
           errorMsg: failure.getMessage(),
         ),
       )),
-      (_) => emit(state.copyWith(
-        tasks: updatedTasks,
-        status: const CubitStatus(
-          statusType: CubitStatusType.success,
-          action: CubitAction.addTask,
-        ),
-      )),
+      (_) {
+        _scheduleForTask(task);
+        emit(state.copyWith(
+          tasks: updatedTasks,
+          status: const CubitStatus(
+            statusType: CubitStatusType.success,
+            action: CubitAction.addTask,
+          ),
+        ));
+      },
     );
   }
 
   Future<void> toggleTask(String id) async {
+    final task = state.tasks.firstWhere((t) => t.id == id);
+    final markingDone = !task.isDone;
+
+    if (markingDone && task.scheduledTime != null) {
+      await _notificationService.cancelNotification(id);
+    }
+
     emit(state.copyWith(
       status: const CubitStatus(
         statusType: CubitStatusType.loading,
@@ -119,6 +140,8 @@ class TasksCubit extends Cubit<TasksState> {
   }
 
   Future<void> deleteTask(String id) async {
+    await _notificationService.cancelNotification(id);
+
     emit(state.copyWith(
       status: const CubitStatus(
         statusType: CubitStatusType.loading,
@@ -144,5 +167,46 @@ class TasksCubit extends Cubit<TasksState> {
         ),
       )),
     );
+  }
+
+  Future<void> rescheduleTask(String id, DateTime newTime) async {
+    await _notificationService.cancelNotification(id);
+
+    final updatedTasks = state.tasks.map((t) {
+      if (t.id == id) {
+        final h = newTime.hour.toString().padLeft(2, '0');
+        final m = newTime.minute.toString().padLeft(2, '0');
+        return t.copyWith(
+          createdAt: _dateOnly(newTime),
+          scheduledTime: '$h:$m',
+        );
+      }
+      return t;
+    }).toList();
+
+    final result = await _saveTasks(updatedTasks);
+    result.fold(
+      (failure) => null,
+      (_) {
+        final updated = updatedTasks.firstWhere((t) => t.id == id);
+        _scheduleForTask(updated);
+        emit(state.copyWith(
+          tasks: updatedTasks,
+          status: const CubitStatus(
+            statusType: CubitStatusType.success,
+            action: CubitAction.toggleTask,
+          ),
+        ));
+      },
+    );
+  }
+
+  void _scheduleForTask(TaskModel task) {
+    if (task.scheduledTime == null || task.reminderType == null) return;
+    if (task.reminderType == 'alarm') {
+      _notificationService.scheduleAlarm(task);
+    } else {
+      _notificationService.scheduleNotification(task);
+    }
   }
 }

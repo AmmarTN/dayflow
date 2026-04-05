@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:dayflow/main.dart' show pendingAlarmTaskId;
 import 'package:dayflow/presentation/common/routes/router.dart';
 import 'package:dayflow/presentation/features/splash_page/contents/hia_splash_content.dart';
 
@@ -29,6 +30,19 @@ class _SplashContentState extends State<SplashContent> with SingleTickerProvider
   void initState() {
     super.initState();
 
+    // If an alarm is already ringing (cold-start from notification),
+    // skip the splash animation and go directly to the alarm screen.
+    final alarmTaskId = pendingAlarmTaskId;
+    if (alarmTaskId != null) {
+      pendingAlarmTaskId = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.router.replaceAll([HomeRoute(), AlarmRoute(taskId: alarmTaskId)]);
+      });
+      // Still create the controller (required by the mixin) but don't animate.
+      animationController = AnimationController(vsync: this, duration: Duration.zero);
+      return;
+    }
+
     animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500), value: 1.0);
     animationController.addStatusListener((status) {
       if (status == AnimationStatus.dismissed) {
@@ -36,7 +50,7 @@ class _SplashContentState extends State<SplashContent> with SingleTickerProvider
       }
     });
     Future.delayed(_splashAnimationDuration, () {
-      animationController.reverse(from: 1.0);
+      if (mounted) animationController.reverse(from: 1.0);
     });
   }
 

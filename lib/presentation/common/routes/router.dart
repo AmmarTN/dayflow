@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/presentation/common/cubit/language/language_cubit.dart';
 import 'package:dayflow/presentation/features/bottom_nav_layout_manager.dart/bottom_nav_layout_widget.dart';
+import 'package:dayflow/presentation/features/alarm/pages/alarm_page.dart';
 import 'package:dayflow/presentation/features/home/pages/home_page.dart';
 import 'package:dayflow/presentation/features/splash_page/splash_page.dart';
 
@@ -23,6 +24,11 @@ class AppRouter extends RootStackRouter {
     ),
     CustomRoute(
       page: HomeRoute.page,
+      transitionsBuilder: TransitionsBuilders.fadeIn,
+      durationInMilliseconds: _duration,
+    ),
+    CustomRoute(
+      page: AlarmRoute.page,
       transitionsBuilder: TransitionsBuilders.fadeIn,
       durationInMilliseconds: _duration,
     ),

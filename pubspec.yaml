@@ -57,6 +57,9 @@ dependencies:
   geolocator:
   geocoding:
   http:
+  flutter_local_notifications:
+  timezone:
+  alarm: ^5.0.0
 
 dev_dependencies:
   flutter_test:

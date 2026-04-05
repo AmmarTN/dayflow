@@ -332,7 +332,17 @@
     "task_title_hint": "What needs to be done?",
     "task_added": "Task added",
     "task_deleted": "Task deleted",
-    "task_completed": "Task completed"
+    "task_completed": "Task completed",
+    "overdue_label": "Overdue",
+    "upcoming_label": "Upcoming",
+    "notify_label": "Notify",
+    "alarm_label": "Alarm"
+  },
+  "alarm": {
+    "task_reminder": "TASK REMINDER",
+    "mark_done": "Mark Done",
+    "snooze_10_min": "Snooze 10 min",
+    "dismiss": "Dismiss"
   },
   "test_screen": {
     "title": "This is a display text for test"

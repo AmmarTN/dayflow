@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="dayflow_dark_background">#040706</color>
+    <color name="dayflow_dark_surface">#0B1110</color>
+    <color name="dayflow_dark_surface_elevated">#101816</color>
+    <color name="dayflow_dark_border">#1D2B27</color>
+    <color name="dayflow_dark_text_primary">#FFFFFF</color>
+    <color name="dayflow_dark_text_secondary">#9CA9A4</color>
+    <color name="dayflow_dark_text_muted">#65716C</color>
+    <color name="dayflow_accent_green">#1EE468</color>
+    <color name="dayflow_accent_green_bright">#42F08A</color>
+    <color name="dayflow_accent_green_soft">#0C1EE468</color>
+    <color name="dayflow_accent_green_glow">#291EE468</color>
+    <color name="dayflow_accent_green_glow_strong">#521EE468</color>
+    <color name="dayflow_accent_green_ring">#401EE468</color>
+    <color name="dayflow_accent_green_tint">#0E1F18</color>
+    <color name="dayflow_time_chip_bg">#0A1511</color>
+    <color name="dayflow_dismiss_chip_bg">#090D0C</color>
+</resources>

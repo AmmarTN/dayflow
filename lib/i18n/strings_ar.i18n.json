@@ -335,7 +335,17 @@
     "task_title_hint": "ما الذي يجب القيام به؟",
     "task_added": "تمت إضافة المهمة",
     "task_deleted": "تم حذف المهمة",
-    "task_completed": "تم إنجاز المهمة"
+    "task_completed": "تم إنجاز المهمة",
+    "overdue_label": "متأخرة",
+    "upcoming_label": "قادمة",
+    "notify_label": "إشعار",
+    "alarm_label": "تنبيه"
+  },
+  "alarm": {
+    "task_reminder": "تذكير بالمهمة",
+    "mark_done": "تم الإنجاز",
+    "snooze_10_min": "تأجيل 10 دقائق",
+    "dismiss": "تجاهل"
   },
   "test_screen": {
     "title": "هذا نص عرض للاختبار"
