@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dayflow/core/usecases/usecase.dart';
 import 'package:dayflow/core/usecases/weather/get_weather.dart';
 import 'package:dayflow/infrastructure/extensions/failures.dart';
 import 'package:dayflow/infrastructure/models/general/cubitStatus.dart';
 import 'package:injectable/injectable.dart';
+import 'package:dayflow/services/widget_data_sync.dart';
 import 'weather_state.dart';
 
 @injectable
@@ -25,10 +28,13 @@ class WeatherCubit extends Cubit<WeatherState> {
           errorMsg: failure.getMessage(),
         ),
       )),
-      (weather) => emit(state.copyWith(
-        weather: weather,
-        status: const CubitStatus(statusType: CubitStatusType.success),
-      )),
+      (weather) {
+        emit(state.copyWith(
+          weather: weather,
+          status: const CubitStatus(statusType: CubitStatusType.success),
+        ));
+        unawaited(WidgetDataSync.sync(weatherOverride: weather));
+      },
     );
   }
 }

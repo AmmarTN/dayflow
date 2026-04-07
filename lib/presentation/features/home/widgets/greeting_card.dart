@@ -35,10 +35,7 @@ class GreetingCard extends StatelessWidget {
   }
 
   Widget _buildToday(BuildContext context) {
-    final baseStyle = AppTextStyles(context).px24wBold().copyWith(
-          color: AppColors.darkTextPrimary,
-          height: 1.35,
-        );
+    final baseStyle = AppTextStyles(context).px24wBold().copyWith(color: AppColors.darkTextPrimary, height: 1.35);
     final accentStyle = baseStyle.copyWith(color: AppColors.accentGreen);
     final taskLabel = pendingCount == 1 ? t.home.task_word : t.home.tasks_word;
     final greeting = _getTimeGreeting();
@@ -49,25 +46,23 @@ class GreetingCard extends StatelessWidget {
         Text('$greeting.', style: baseStyle),
         SizedBox(height: 4.h),
         Text.rich(
-          TextSpan(style: baseStyle, children: [
-            TextSpan(text: t.home.tasks_before_count),
-            TextSpan(text: '$pendingCount $taskLabel', style: accentStyle),
-            TextSpan(text: t.home.tasks_after_count),
-          ]),
+          TextSpan(
+            style: baseStyle,
+            children: [
+              TextSpan(text: t.home.tasks_before_count),
+              TextSpan(text: '$pendingCount $taskLabel', style: accentStyle),
+              TextSpan(text: t.home.tasks_after_count),
+            ],
+          ),
         ),
       ],
     );
   }
 
   Widget _buildPast(BuildContext context) {
-    final baseStyle = AppTextStyles(context).px24wBold().copyWith(
-          color: AppColors.darkTextPrimary,
-          height: 1.35,
-        );
+    final baseStyle = AppTextStyles(context).px24wBold().copyWith(color: AppColors.darkTextPrimary, height: 1.35);
     final accentStyle = baseStyle.copyWith(color: AppColors.accentBlue);
-    final subStyle = AppTextStyles(context).px14wMedium().copyWith(
-          color: AppColors.darkTextSecondary,
-        );
+    final subStyle = AppTextStyles(context).px14wMedium().copyWith(color: AppColors.darkTextSecondary);
     final dateLabel = DateFormat('EEEE, MMMM d').format(selectedDate);
     final missedCount = totalCount - completedCount;
     final taskLabel = totalCount == 1 ? t.home.task_word : t.home.tasks_word;
@@ -78,32 +73,27 @@ class GreetingCard extends StatelessWidget {
         Text('$dateLabel —', style: baseStyle.copyWith(fontSize: 20.sp)),
         SizedBox(height: 4.h),
         Text.rich(
-          TextSpan(style: baseStyle, children: [
-            TextSpan(text: t.home.past_you_had),
-            TextSpan(text: '$totalCount $taskLabel', style: accentStyle),
-            TextSpan(text: t.home.past_this_day),
-          ]),
+          TextSpan(
+            style: baseStyle,
+            children: [
+              TextSpan(text: t.home.past_you_had),
+              TextSpan(text: '$totalCount $taskLabel', style: accentStyle),
+              TextSpan(text: t.home.past_this_day),
+            ],
+          ),
         ),
         if (totalCount > 0) ...[
           SizedBox(height: 6.h),
-          Text(
-            '$completedCount${t.home.past_completed} · $missedCount${t.home.past_missed}',
-            style: subStyle,
-          ),
+          Text('$completedCount${t.home.past_completed} · $missedCount${t.home.past_missed}', style: subStyle),
         ],
       ],
     );
   }
 
   Widget _buildFuture(BuildContext context) {
-    final baseStyle = AppTextStyles(context).px24wBold().copyWith(
-          color: AppColors.darkTextPrimary,
-          height: 1.35,
-        );
+    final baseStyle = AppTextStyles(context).px24wBold().copyWith(color: AppColors.darkTextPrimary, height: 1.35);
     final accentStyle = baseStyle.copyWith(color: AppColors.accentOrange);
-    final subStyle = AppTextStyles(context).px14wMedium().copyWith(
-          color: AppColors.darkTextSecondary,
-        );
+    final subStyle = AppTextStyles(context).px14wMedium().copyWith(color: AppColors.darkTextSecondary);
     final dateLabel = DateFormat('EEEE, MMMM d').format(selectedDate);
     final taskLabel = totalCount == 1 ? t.home.task_word : t.home.tasks_word;
 
@@ -113,14 +103,17 @@ class GreetingCard extends StatelessWidget {
         Text('$dateLabel —', style: baseStyle.copyWith(fontSize: 20.sp)),
         SizedBox(height: 4.h),
         Text.rich(
-          TextSpan(style: baseStyle, children: [
-            TextSpan(text: t.home.future_you_have),
-            TextSpan(text: '$totalCount $taskLabel', style: accentStyle),
-            TextSpan(text: t.home.future_planned),
-          ]),
+          TextSpan(
+            style: baseStyle,
+            children: [
+              TextSpan(text: t.home.future_you_have),
+              TextSpan(text: '$totalCount $taskLabel', style: accentStyle),
+              TextSpan(text: t.home.future_planned),
+            ],
+          ),
         ),
         SizedBox(height: 6.h),
-        Text(t.home.future_tap_add, style: subStyle),
+        //Text(t.home.future_tap_add, style: subStyle),
       ],
     );
   }

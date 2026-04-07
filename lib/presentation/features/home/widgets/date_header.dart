@@ -65,27 +65,79 @@ class DateHeader extends StatelessWidget {
   }
 }
 
-class _ActivityRing extends StatelessWidget {
+class _ActivityRing extends StatefulWidget {
   final double ratio;
 
   const _ActivityRing({required this.ratio});
 
   @override
+  State<_ActivityRing> createState() => _ActivityRingState();
+}
+
+class _ActivityRingState extends State<_ActivityRing>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  double _oldRatio = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: widget.ratio).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ActivityRing oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.ratio != widget.ratio) {
+      _oldRatio = _animation.value;
+      _animation = Tween<double>(begin: _oldRatio, end: widget.ratio).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      );
+      _controller
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 36.w,
-      height: 36.w,
-      child: CustomPaint(
-        painter: _ActivityRingPainter(ratio: ratio),
-      ),
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return SizedBox(
+          width: 36.w,
+          height: 36.w,
+          child: CustomPaint(
+            painter: _ActivityRingPainter(
+              ratio: _animation.value,
+              glowOpacity: _animation.value > 0 ? (_controller.value * 0.4).clamp(0.0, 0.4) : 0,
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _ActivityRingPainter extends CustomPainter {
   final double ratio;
+  final double glowOpacity;
 
-  _ActivityRingPainter({required this.ratio});
+  _ActivityRingPainter({required this.ratio, this.glowOpacity = 0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -107,6 +159,24 @@ class _ActivityRingPainter extends CustomPainter {
     canvas.drawCircle(center, radius, bgPaint);
 
     if (ratio > 0) {
+      // Glow behind the arc
+      if (glowOpacity > 0) {
+        final glowPaint = Paint()
+          ..color = AppColors.accentGreen.withValues(alpha: glowOpacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 8
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+        final sweepAngle = 2 * pi * ratio;
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: radius),
+          -pi / 2,
+          sweepAngle,
+          false,
+          glowPaint,
+        );
+      }
+
       final sweepAngle = 2 * pi * ratio;
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -120,7 +190,7 @@ class _ActivityRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ActivityRingPainter oldDelegate) =>
-      oldDelegate.ratio != ratio;
+      oldDelegate.ratio != ratio || oldDelegate.glowOpacity != glowOpacity;
 }
 
 class _FractionBadge extends StatelessWidget {

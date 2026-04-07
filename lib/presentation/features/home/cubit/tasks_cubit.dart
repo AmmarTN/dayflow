@@ -6,6 +6,7 @@ import 'package:dayflow/core/usecases/usecase.dart';
 import 'package:dayflow/infrastructure/extensions/failures.dart';
 import 'package:dayflow/infrastructure/models/general/cubitStatus.dart';
 import 'package:dayflow/infrastructure/models/tasks/task_model.dart';
+import 'package:dayflow/services/widget_data_sync.dart';
 import 'package:injectable/injectable.dart';
 import 'tasks_state.dart';
 
@@ -96,6 +97,7 @@ class TasksCubit extends Cubit<TasksState> {
             action: CubitAction.addTask,
           ),
         ));
+        WidgetDataSync.sync();
       },
     );
   }
@@ -129,13 +131,16 @@ class TasksCubit extends Cubit<TasksState> {
           errorMsg: failure.getMessage(),
         ),
       )),
-      (_) => emit(state.copyWith(
-        tasks: updatedTasks,
-        status: const CubitStatus(
-          statusType: CubitStatusType.success,
-          action: CubitAction.toggleTask,
-        ),
-      )),
+      (_) {
+        emit(state.copyWith(
+          tasks: updatedTasks,
+          status: const CubitStatus(
+            statusType: CubitStatusType.success,
+            action: CubitAction.toggleTask,
+          ),
+        ));
+        WidgetDataSync.sync();
+      },
     );
   }
 
@@ -159,13 +164,16 @@ class TasksCubit extends Cubit<TasksState> {
           errorMsg: failure.getMessage(),
         ),
       )),
-      (_) => emit(state.copyWith(
-        tasks: updatedTasks,
-        status: const CubitStatus(
-          statusType: CubitStatusType.success,
-          action: CubitAction.deleteTask,
-        ),
-      )),
+      (_) {
+        emit(state.copyWith(
+          tasks: updatedTasks,
+          status: const CubitStatus(
+            statusType: CubitStatusType.success,
+            action: CubitAction.deleteTask,
+          ),
+        ));
+        WidgetDataSync.sync();
+      },
     );
   }
 
@@ -197,6 +205,7 @@ class TasksCubit extends Cubit<TasksState> {
             action: CubitAction.toggleTask,
           ),
         ));
+        WidgetDataSync.sync();
       },
     );
   }

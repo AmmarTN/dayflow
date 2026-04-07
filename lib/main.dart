@@ -11,6 +11,8 @@ import 'package:dayflow/core/usecases/tasks/get_tasks.dart';
 import 'package:dayflow/core/usecases/tasks/save_tasks.dart';
 import 'package:dayflow/injection.dart';
 import 'package:dayflow/presentation/dayflow_app.dart';
+import 'package:dayflow/services/widget_data_sync.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 
 /// Task ID of an alarm that was already ringing when the app cold-started.
@@ -46,6 +48,10 @@ void main() {
         getIt<GetTasks>(),
         getIt<SaveTasks>(),
       );
+
+      await HomeWidget.setAppGroupId('group.com.ammaross.dayflow');
+      unawaited(WidgetDataSync.sync());
+      HomeWidget.widgetClicked.listen((_) => WidgetDataSync.sync());
 
       runApp(const DayFlowAppProvided());
     },

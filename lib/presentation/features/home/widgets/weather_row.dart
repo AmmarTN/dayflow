@@ -8,7 +8,9 @@ import 'package:dayflow/presentation/features/home/cubit/weather_cubit.dart';
 import 'package:dayflow/presentation/features/home/cubit/weather_state.dart';
 
 class WeatherRow extends StatelessWidget {
-  const WeatherRow({super.key});
+  final bool compact;
+
+  const WeatherRow({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -31,19 +33,25 @@ class WeatherRow extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 14.sp,
-          height: 14.sp,
+          width: compact ? 12.sp : 14.sp,
+          height: compact ? 12.sp : 14.sp,
           child: CircularProgressIndicator(
             strokeWidth: 1.5,
             color: AppColors.darkTextMuted,
           ),
         ),
         SizedBox(width: 8.w),
-        Text(
-          'Loading weather...',
-          style: AppTextStyles(context).px13wRegular().copyWith(
-                color: AppColors.darkTextMuted,
-              ),
+        Flexible(
+          child: Text(
+            'Loading weather...',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style:
+                (compact
+                        ? AppTextStyles(context).px12wRegular()
+                        : AppTextStyles(context).px13wRegular())
+                    .copyWith(color: AppColors.darkTextMuted),
+          ),
         ),
       ],
     );
@@ -58,20 +66,26 @@ class WeatherRow extends StatelessWidget {
           Icon(
             Icons.cloud_off_outlined,
             color: AppColors.darkTextMuted,
-            size: 18.sp,
+            size: compact ? 16.sp : 18.sp,
           ),
           SizedBox(width: 6.w),
-          Text(
-            'Weather unavailable',
-            style: AppTextStyles(context).px13wRegular().copyWith(
-                  color: AppColors.darkTextMuted,
-                ),
+          Flexible(
+            child: Text(
+              'Weather unavailable',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  (compact
+                          ? AppTextStyles(context).px12wRegular()
+                          : AppTextStyles(context).px13wRegular())
+                      .copyWith(color: AppColors.darkTextMuted),
+            ),
           ),
           SizedBox(width: 4.w),
           Icon(
             Icons.refresh_rounded,
             color: AppColors.darkTextMuted,
-            size: 14.sp,
+            size: compact ? 12.sp : 14.sp,
           ),
         ],
       ),
@@ -86,28 +100,36 @@ class WeatherRow extends StatelessWidget {
       children: [
         Text(
           _weatherEmoji(weather.weatherCode),
-          style: TextStyle(fontSize: 20.sp),
+          style: TextStyle(fontSize: compact ? 18.sp : 20.sp),
         ),
         SizedBox(width: 6.w),
         Text(
           '$temp\u00B0',
-          style: AppTextStyles(context).px14wMedium().copyWith(
-                color: AppColors.darkTextPrimary,
-              ),
+          style:
+              (compact
+                      ? AppTextStyles(context).px13wMedium()
+                      : AppTextStyles(context).px14wMedium())
+                  .copyWith(color: AppColors.darkTextPrimary),
         ),
         if (weather.cityName.isNotEmpty) ...[
           SizedBox(width: 6.w),
           Icon(
             Icons.navigation_outlined,
             color: AppColors.darkTextMuted,
-            size: 12.sp,
+            size: compact ? 11.sp : 12.sp,
           ),
           SizedBox(width: 4.w),
-          Text(
-            weather.cityName,
-            style: AppTextStyles(context).px13wRegular().copyWith(
-                  color: AppColors.darkTextSecondary,
-                ),
+          Flexible(
+            child: Text(
+              weather.cityName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  (compact
+                          ? AppTextStyles(context).px12wRegular()
+                          : AppTextStyles(context).px13wRegular())
+                      .copyWith(color: AppColors.darkTextSecondary),
+            ),
           ),
         ],
       ],

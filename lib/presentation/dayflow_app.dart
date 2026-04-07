@@ -17,6 +17,7 @@ import 'package:dayflow/presentation/common/theme/app_theme_data.dart';
 import 'package:dayflow/presentation/common/widgets/scroll_behaviors/scroll_glow_indicator_disabler.dart';
 import 'package:dayflow/presentation/features/home/cubit/tasks_cubit.dart';
 import 'package:dayflow/presentation/features/home/cubit/weather_cubit.dart';
+import 'package:dayflow/services/widget_data_sync.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -73,6 +74,7 @@ class _DayFlowAppState extends State<DayFlowApp> {
 
   late final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver(
     onResumed: () async {
+      WidgetDataSync.sync();
       if (defaultTargetPlatform != TargetPlatform.android || !mounted) return;
       final changed = await getIt<NotificationService>()
           .syncPendingAndroidAlarmActions(
