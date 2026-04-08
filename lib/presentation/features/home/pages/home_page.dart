@@ -42,6 +42,12 @@ class _HomePageState extends State<HomePage> {
         final filteredTasks = state.filteredTasks;
         final overdueTasks = state.overdueTasks;
         final upcomingTasks = state.upcomingTasks;
+        final isEmptyScrollableState =
+            (temporal != TemporalState.today && filteredTasks.isEmpty) ||
+            (temporal == TemporalState.today &&
+                filteredTasks.isEmpty &&
+                overdueTasks.isEmpty &&
+                upcomingTasks.isEmpty);
 
         return Scaffold(
           backgroundColor: AppColors.darkBackground,
@@ -78,6 +84,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Expanded(
                       child: CustomScrollView(
+                        physics: isEmptyScrollableState
+                            ? const NeverScrollableScrollPhysics()
+                            : const BouncingScrollPhysics(),
                         slivers: [
                           SliverPersistentHeader(
                             pinned: true,
