@@ -9,6 +9,10 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.location.Location
 import android.location.LocationManager
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.tasks.Tasks
 import androidx.core.content.ContextCompat
 import es.antonborri.home_widget.HomeWidgetPlugin
 import org.json.JSONObject
@@ -16,6 +20,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 data class WidgetHeaderMetadata(
@@ -33,12 +38,21 @@ data class WidgetWeatherSnapshot(
     val updatedAtMillis: Long,
 )
 
+data class WidgetLocationSnapshot(
+    val latitude: Double,
+    val longitude: Double,
+    val updatedAtMillis: Long,
+)
+
 object WidgetWeatherHelper {
     private const val weatherFreshnessMs = 60 * 60 * 1000L
     private const val weatherTempKey = "weather_temp"
     private const val weatherTempValueKey = "weather_temp_value"
     private const val weatherCodeKey = "weather_code"
     private const val weatherUpdatedAtKey = "weather_updated_at"
+    private const val weatherLatKey = "weather_lat"
+    private const val weatherLonKey = "weather_lon"
+    private const val weatherLocationUpdatedAtKey = "weather_location_updated_at"
 
     fun widgetData(context: Context): SharedPreferences = HomeWidgetPlugin.getData(context)
 
@@ -109,11 +123,9 @@ object WidgetWeatherHelper {
     }
 
     fun fetchAndPersistWeather(context: Context, prefs: SharedPreferences): WidgetWeatherSnapshot? {
-        if (!hasLocationPermission(context)) return null
-
-        val location = resolveLastKnownLocation(context) ?: return null
-        val latitude = location.latitude.toString()
-        val longitude = location.longitude.toString()
+        val locationSnapshot = resolveLocationSnapshot(context, prefs) ?: return null
+        val latitude = locationSnapshot.latitude.toString()
+        val longitude = locationSnapshot.longitude.toString()
         val timezone = URLEncoder.encode(java.util.TimeZone.getDefault().id, Charsets.UTF_8.name())
         val url = URL(
             "https://api.open-meteo.com/v1/forecast" +
@@ -142,7 +154,13 @@ object WidgetWeatherHelper {
                     weatherCode = current.getInt("weather_code"),
                     updatedAtMillis = System.currentTimeMillis(),
                 )
-                persistWeather(prefs, snapshot)
+                persistWeather(
+                    prefs = prefs,
+                    snapshot = snapshot,
+                    locationSnapshot = locationSnapshot.copy(
+                        updatedAtMillis = System.currentTimeMillis()
+                    ),
+                )
                 snapshot
             }
         } catch (_: Exception) {
@@ -169,13 +187,20 @@ object WidgetWeatherHelper {
     private fun persistWeather(
         prefs: SharedPreferences,
         snapshot: WidgetWeatherSnapshot,
+        locationSnapshot: WidgetLocationSnapshot? = null,
     ) {
-        prefs.edit()
+        val editor = prefs.edit()
             .putString(weatherTempKey, "${snapshot.tempValue}°")
             .putInt(weatherTempValueKey, snapshot.tempValue)
             .putInt(weatherCodeKey, snapshot.weatherCode)
             .putLong(weatherUpdatedAtKey, snapshot.updatedAtMillis)
-            .apply()
+        if (locationSnapshot != null) {
+            editor
+                .putString(weatherLatKey, locationSnapshot.latitude.toString())
+                .putString(weatherLonKey, locationSnapshot.longitude.toString())
+                .putLong(weatherLocationUpdatedAtKey, locationSnapshot.updatedAtMillis)
+        }
+        editor.apply()
     }
 
     private fun hasLocationPermission(context: Context): Boolean {
@@ -201,6 +226,61 @@ object WidgetWeatherHelper {
                     runCatching { locationManager.getLastKnownLocation(provider) }.getOrNull()
                 }
                 .maxByOrNull { it.time }
+        }.getOrNull()
+    }
+
+    private fun resolveLocationSnapshot(
+        context: Context,
+        prefs: SharedPreferences,
+    ): WidgetLocationSnapshot? {
+        val liveLocation = if (hasLocationPermission(context)) {
+            resolveCurrentFusedLocation(context)
+                ?: resolveFusedLastLocation(context)
+                ?: resolveLastKnownLocation(context)
+        } else {
+            null
+        }
+
+        if (liveLocation != null) {
+            return WidgetLocationSnapshot(
+                latitude = liveLocation.latitude,
+                longitude = liveLocation.longitude,
+                updatedAtMillis = System.currentTimeMillis(),
+            )
+        }
+
+        return readLocationSnapshot(prefs)
+    }
+
+    private fun readLocationSnapshot(prefs: SharedPreferences): WidgetLocationSnapshot? {
+        val lat = prefs.getString(weatherLatKey, null)?.toDoubleOrNull() ?: return null
+        val lon = prefs.getString(weatherLonKey, null)?.toDoubleOrNull() ?: return null
+        return WidgetLocationSnapshot(
+            latitude = lat,
+            longitude = lon,
+            updatedAtMillis = prefs.getLong(weatherLocationUpdatedAtKey, 0L),
+        )
+    }
+
+    private fun resolveCurrentFusedLocation(context: Context): Location? {
+        return runCatching {
+            val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+            val tokenSource = CancellationTokenSource()
+            Tasks.await(
+                fusedClient.getCurrentLocation(
+                    Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                    tokenSource.token,
+                ),
+                8,
+                TimeUnit.SECONDS,
+            )
+        }.getOrNull()
+    }
+
+    private fun resolveFusedLastLocation(context: Context): Location? {
+        return runCatching {
+            val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+            Tasks.await(fusedClient.lastLocation, 5, TimeUnit.SECONDS)
         }.getOrNull()
     }
 
