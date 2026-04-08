@@ -392,7 +392,7 @@ class _HomePageState extends State<HomePage> {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2)],
+        boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.3), blurRadius: 20.r, spreadRadius: 2)],
       ),
       child: FloatingActionButton(
         onPressed: () => AddTaskSheet.show(context),
