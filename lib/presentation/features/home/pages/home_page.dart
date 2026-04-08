@@ -348,19 +348,30 @@ class _HomePageState extends State<HomePage> {
       left: -100.w,
       right: -100.w,
       child: IgnorePointer(
-        child: Container(
-          height: screenH * 0.395,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0.0, -0.3),
-              colors: [
-                accent.withValues(alpha: 0.12),
-                accent.withValues(alpha: 0.06),
-                accent.withValues(alpha: 0.02),
-                AppColors.darkBackground.withValues(alpha: 0.0),
-              ],
-              stops: const [0.0, 0.3, 0.55, 1.0],
-              radius: 1.0,
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) {
+            return const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.white, Colors.transparent],
+              stops: [0.0, 0.7, 1.0],
+            ).createShader(bounds);
+          },
+          child: Container(
+            height: screenH * 0.395,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.0, -0.3),
+                colors: [
+                  accent.withValues(alpha: 0.12),
+                  accent.withValues(alpha: 0.06),
+                  accent.withValues(alpha: 0.02),
+                  AppColors.darkBackground.withValues(alpha: 0.0),
+                ],
+                stops: const [0.0, 0.3, 0.55, 1.0],
+                radius: 1.0,
+              ),
             ),
           ),
         ),
@@ -456,10 +467,7 @@ class _HomeSummaryHeaderDelegate extends SliverPersistentHeaderDelegate {
                             layoutBuilder: (currentChild, previousChildren) {
                               return Stack(
                                 alignment: Alignment.topLeft,
-                                children: [
-                                  ...previousChildren,
-                                  if (currentChild != null) currentChild,
-                                ],
+                                children: [...previousChildren, if (currentChild != null) currentChild],
                               );
                             },
                             transitionBuilder: (child, animation) {

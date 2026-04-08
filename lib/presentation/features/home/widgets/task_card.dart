@@ -186,6 +186,8 @@ class TaskCard extends StatelessWidget {
       children: [
         Text(
           task.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles(context).px15wSemiBold().copyWith(
             color: titleColor,
             decoration: titleDecoration,
@@ -199,7 +201,7 @@ class TaskCard extends StatelessWidget {
             style: AppTextStyles(
               context,
             ).px12wRegular().copyWith(color: AppColors.darkTextMuted),
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ],
