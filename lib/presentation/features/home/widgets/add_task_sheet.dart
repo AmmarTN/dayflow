@@ -28,7 +28,8 @@ class AddTaskSheet extends StatefulWidget {
 class _AddTaskSheetState extends State<AddTaskSheet> {
   final _titleController = TextEditingController();
   final _subtitleController = TextEditingController();
-  final _focusNode = FocusNode();
+  final _titleFocusNode = FocusNode();
+  final _subtitleFocusNode = FocusNode();
   late DateTime _selectedDate;
   TimeOfDay? _selectedTime;
   String _reminderType = 'notification';
@@ -37,21 +38,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   void initState() {
     super.initState();
     _selectedDate = context.read<TasksCubit>().state.currentDate;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _subtitleController.dispose();
-    _focusNode.dispose();
+    _titleFocusNode.dispose();
+    _subtitleFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _pickDate() async {
-    _focusNode.unfocus();
+    FocusScope.of(context).unfocus();
     final picked = await _showStyledDatePicker();
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -59,7 +58,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   }
 
   Future<void> _pickTime() async {
-    _focusNode.unfocus();
+    FocusScope.of(context).unfocus();
     final picked = await _showStyledTimePicker();
     if (picked != null) {
       setState(() => _selectedTime = picked);
@@ -627,7 +626,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                 ),
                                 SizedBox(height: 6.h),
                                 Text(
-                                  'Keep it quick. Add the task, then choose when it should surface.',
+                                  'Add the task, then choose when it should surface.',
                                   style: AppTextStyles(
                                     context,
                                   ).px13wRegular().copyWith(color: AppColors.darkTextSecondary, height: 1.42),
@@ -642,16 +641,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       SizedBox(height: 24.h),
                       _buildTextField(
                         controller: _titleController,
-                        focusNode: _focusNode,
+                        focusNode: _titleFocusNode,
                         hint: t.home.task_title_hint,
                         icon: Icons.edit_outlined,
-                        onSubmitted: (_) => _submit(),
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: (_) => _subtitleFocusNode.requestFocus(),
                       ),
                       SizedBox(height: 12.h),
                       _buildTextField(
                         controller: _subtitleController,
+                        focusNode: _subtitleFocusNode,
                         hint: 'Add a note (optional)',
                         icon: Icons.notes_rounded,
+                        textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _submit(),
                       ),
                       SizedBox(height: 16.h),
@@ -937,11 +939,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     FocusNode? focusNode,
     required String hint,
     required IconData icon,
+    TextInputAction textInputAction = TextInputAction.done,
     ValueChanged<String>? onSubmitted,
   }) {
     return TextField(
       controller: controller,
       focusNode: focusNode,
+      textInputAction: textInputAction,
       onSubmitted: onSubmitted,
       style: AppTextStyles(context).px15wRegular().copyWith(color: AppColors.darkTextPrimary),
       cursorColor: AppColors.accentGreen,
