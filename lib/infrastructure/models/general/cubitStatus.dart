@@ -6,6 +6,7 @@ enum CubitAction {
   none,
   loadTasks,
   addTask,
+  updateTask,
   toggleTask,
   deleteTask,
 }

@@ -17,7 +17,7 @@ class TasksCubit extends Cubit<TasksState> {
   final NotificationService _notificationService;
 
   TasksCubit(this._getTasks, this._saveTasks, this._notificationService)
-      : super(TasksState(selectedDate: _dateOnly(DateTime.now())));
+    : super(TasksState(selectedDate: _dateOnly(DateTime.now())));
 
   static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
@@ -26,30 +26,36 @@ class TasksCubit extends Cubit<TasksState> {
   }
 
   void loadTasks() {
-    emit(state.copyWith(
-      status: const CubitStatus(
-        statusType: CubitStatusType.loading,
-        action: CubitAction.loadTasks,
+    emit(
+      state.copyWith(
+        status: const CubitStatus(
+          statusType: CubitStatusType.loading,
+          action: CubitAction.loadTasks,
+        ),
       ),
-    ));
+    );
 
     final result = _getTasks(NoParams());
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CubitStatus(
-          statusType: CubitStatusType.failure,
-          action: CubitAction.loadTasks,
-          errorMsg: failure.getMessage(),
-        ),
-      )),
-      (tasks) {
-        emit(state.copyWith(
-          tasks: tasks,
-          status: const CubitStatus(
-            statusType: CubitStatusType.success,
+      (failure) => emit(
+        state.copyWith(
+          status: CubitStatus(
+            statusType: CubitStatusType.failure,
             action: CubitAction.loadTasks,
+            errorMsg: failure.getMessage(),
           ),
-        ));
+        ),
+      ),
+      (tasks) {
+        emit(
+          state.copyWith(
+            tasks: tasks,
+            status: const CubitStatus(
+              statusType: CubitStatusType.success,
+              action: CubitAction.loadTasks,
+            ),
+          ),
+        );
       },
     );
   }
@@ -61,12 +67,14 @@ class TasksCubit extends Cubit<TasksState> {
     String? scheduledTime,
     String? reminderType,
   }) async {
-    emit(state.copyWith(
-      status: const CubitStatus(
-        statusType: CubitStatusType.loading,
-        action: CubitAction.addTask,
+    emit(
+      state.copyWith(
+        status: const CubitStatus(
+          statusType: CubitStatusType.loading,
+          action: CubitAction.addTask,
+        ),
       ),
-    ));
+    );
 
     final taskDate = date != null ? _dateOnly(date) : state.currentDate;
     final task = TaskModel(
@@ -81,22 +89,91 @@ class TasksCubit extends Cubit<TasksState> {
     final updatedTasks = [task, ...state.tasks];
     final result = await _saveTasks(updatedTasks);
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CubitStatus(
-          statusType: CubitStatusType.failure,
-          action: CubitAction.addTask,
-          errorMsg: failure.getMessage(),
+      (failure) => emit(
+        state.copyWith(
+          status: CubitStatus(
+            statusType: CubitStatusType.failure,
+            action: CubitAction.addTask,
+            errorMsg: failure.getMessage(),
+          ),
         ),
-      )),
+      ),
       (_) {
         _scheduleForTask(task);
-        emit(state.copyWith(
-          tasks: updatedTasks,
-          status: const CubitStatus(
-            statusType: CubitStatusType.success,
-            action: CubitAction.addTask,
+        emit(
+          state.copyWith(
+            tasks: updatedTasks,
+            status: const CubitStatus(
+              statusType: CubitStatusType.success,
+              action: CubitAction.addTask,
+            ),
           ),
-        ));
+        );
+        WidgetDataSync.sync();
+      },
+    );
+  }
+
+  Future<void> updateTask(
+    String id, {
+    required String title,
+    String? subtitle,
+    required DateTime date,
+    String? scheduledTime,
+    String? reminderType,
+  }) async {
+    final existingTaskIndex = state.tasks.indexWhere((t) => t.id == id);
+    if (existingTaskIndex == -1) return;
+    final existingTask = state.tasks[existingTaskIndex];
+
+    if (existingTask.scheduledTime != null) {
+      await _notificationService.cancelNotification(id);
+    }
+
+    emit(
+      state.copyWith(
+        status: const CubitStatus(
+          statusType: CubitStatusType.loading,
+          action: CubitAction.updateTask,
+        ),
+      ),
+    );
+
+    final updatedTask = existingTask.copyWith(
+      title: title,
+      subtitle: subtitle,
+      createdAt: _dateOnly(date),
+      scheduledTime: scheduledTime,
+      reminderType: reminderType,
+    );
+
+    final updatedTasks = state.tasks.map((task) {
+      if (task.id == id) return updatedTask;
+      return task;
+    }).toList();
+
+    final result = await _saveTasks(updatedTasks);
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: CubitStatus(
+            statusType: CubitStatusType.failure,
+            action: CubitAction.updateTask,
+            errorMsg: failure.getMessage(),
+          ),
+        ),
+      ),
+      (_) {
+        _scheduleForTask(updatedTask);
+        emit(
+          state.copyWith(
+            tasks: updatedTasks,
+            status: const CubitStatus(
+              statusType: CubitStatusType.success,
+              action: CubitAction.updateTask,
+            ),
+          ),
+        );
         WidgetDataSync.sync();
       },
     );
@@ -110,12 +187,14 @@ class TasksCubit extends Cubit<TasksState> {
       await _notificationService.cancelNotification(id);
     }
 
-    emit(state.copyWith(
-      status: const CubitStatus(
-        statusType: CubitStatusType.loading,
-        action: CubitAction.toggleTask,
+    emit(
+      state.copyWith(
+        status: const CubitStatus(
+          statusType: CubitStatusType.loading,
+          action: CubitAction.toggleTask,
+        ),
       ),
-    ));
+    );
 
     final updatedTasks = state.tasks.map((t) {
       if (t.id == id) return t.copyWith(isDone: !t.isDone);
@@ -124,21 +203,25 @@ class TasksCubit extends Cubit<TasksState> {
 
     final result = await _saveTasks(updatedTasks);
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CubitStatus(
-          statusType: CubitStatusType.failure,
-          action: CubitAction.toggleTask,
-          errorMsg: failure.getMessage(),
-        ),
-      )),
-      (_) {
-        emit(state.copyWith(
-          tasks: updatedTasks,
-          status: const CubitStatus(
-            statusType: CubitStatusType.success,
+      (failure) => emit(
+        state.copyWith(
+          status: CubitStatus(
+            statusType: CubitStatusType.failure,
             action: CubitAction.toggleTask,
+            errorMsg: failure.getMessage(),
           ),
-        ));
+        ),
+      ),
+      (_) {
+        emit(
+          state.copyWith(
+            tasks: updatedTasks,
+            status: const CubitStatus(
+              statusType: CubitStatusType.success,
+              action: CubitAction.toggleTask,
+            ),
+          ),
+        );
         WidgetDataSync.sync();
       },
     );
@@ -147,31 +230,37 @@ class TasksCubit extends Cubit<TasksState> {
   Future<void> deleteTask(String id) async {
     await _notificationService.cancelNotification(id);
 
-    emit(state.copyWith(
-      status: const CubitStatus(
-        statusType: CubitStatusType.loading,
-        action: CubitAction.deleteTask,
+    emit(
+      state.copyWith(
+        status: const CubitStatus(
+          statusType: CubitStatusType.loading,
+          action: CubitAction.deleteTask,
+        ),
       ),
-    ));
+    );
 
     final updatedTasks = state.tasks.where((t) => t.id != id).toList();
     final result = await _saveTasks(updatedTasks);
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CubitStatus(
-          statusType: CubitStatusType.failure,
-          action: CubitAction.deleteTask,
-          errorMsg: failure.getMessage(),
-        ),
-      )),
-      (_) {
-        emit(state.copyWith(
-          tasks: updatedTasks,
-          status: const CubitStatus(
-            statusType: CubitStatusType.success,
+      (failure) => emit(
+        state.copyWith(
+          status: CubitStatus(
+            statusType: CubitStatusType.failure,
             action: CubitAction.deleteTask,
+            errorMsg: failure.getMessage(),
           ),
-        ));
+        ),
+      ),
+      (_) {
+        emit(
+          state.copyWith(
+            tasks: updatedTasks,
+            status: const CubitStatus(
+              statusType: CubitStatusType.success,
+              action: CubitAction.deleteTask,
+            ),
+          ),
+        );
         WidgetDataSync.sync();
       },
     );
@@ -193,21 +282,20 @@ class TasksCubit extends Cubit<TasksState> {
     }).toList();
 
     final result = await _saveTasks(updatedTasks);
-    result.fold(
-      (failure) => null,
-      (_) {
-        final updated = updatedTasks.firstWhere((t) => t.id == id);
-        _scheduleForTask(updated);
-        emit(state.copyWith(
+    result.fold((failure) => null, (_) {
+      final updated = updatedTasks.firstWhere((t) => t.id == id);
+      _scheduleForTask(updated);
+      emit(
+        state.copyWith(
           tasks: updatedTasks,
           status: const CubitStatus(
             statusType: CubitStatusType.success,
             action: CubitAction.toggleTask,
           ),
-        ));
-        WidgetDataSync.sync();
-      },
-    );
+        ),
+      );
+      WidgetDataSync.sync();
+    });
   }
 
   void _scheduleForTask(TaskModel task) {

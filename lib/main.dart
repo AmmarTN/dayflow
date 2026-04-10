@@ -7,8 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:alarm/alarm.dart';
 import 'package:dayflow/core/debug/app_bloc_observer.dart';
 import 'package:dayflow/core/services/notification_service.dart';
-import 'package:dayflow/core/usecases/tasks/get_tasks.dart';
-import 'package:dayflow/core/usecases/tasks/save_tasks.dart';
 import 'package:dayflow/injection.dart';
 import 'package:dayflow/presentation/dayflow_app.dart';
 import 'package:dayflow/services/widget_data_sync.dart';
@@ -25,9 +23,7 @@ void main() {
       WidgetsFlutterBinding.ensureInitialized();
       Bloc.observer = AppBlocObserver();
 
-      unawaited(
-        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-      );
+      unawaited(SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
 
       tz_data.initializeTimeZones();
       await Alarm.init();
@@ -44,13 +40,12 @@ void main() {
 
       await configureDependencies();
       await getIt<NotificationService>().init();
-      await getIt<NotificationService>().syncPendingAndroidAlarmActions(
-        getIt<GetTasks>(),
-        getIt<SaveTasks>(),
-      );
+      final androidAlarmActionsChanged = await syncAndroidAlarmActionsAndWidget();
 
       await HomeWidget.setAppGroupId('group.com.ammaross.dayflow');
-      unawaited(WidgetDataSync.sync());
+      if (!androidAlarmActionsChanged) {
+        unawaited(WidgetDataSync.sync());
+      }
       HomeWidget.widgetClicked.listen((_) => WidgetDataSync.sync());
 
       runApp(const DayFlowAppProvided());

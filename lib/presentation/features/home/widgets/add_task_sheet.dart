@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:dayflow/infrastructure/models/tasks/task_model.dart';
 import 'package:dayflow/presentation/common/theme/app_colors.dart';
 import 'package:dayflow/presentation/common/theme/app_text_styles.dart';
 import 'package:dayflow/presentation/features/home/cubit/tasks_cubit.dart';
@@ -10,14 +11,19 @@ import 'package:dayflow/i18n/strings.g.dart';
 import 'package:intl/intl.dart';
 
 class AddTaskSheet extends StatefulWidget {
-  const AddTaskSheet({super.key});
+  final TaskModel? initialTask;
 
-  static void show(BuildContext context) {
+  const AddTaskSheet({super.key, this.initialTask});
+
+  static void show(BuildContext context, {TaskModel? initialTask}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(value: context.read<TasksCubit>(), child: const AddTaskSheet()),
+      builder: (_) => BlocProvider.value(
+        value: context.read<TasksCubit>(),
+        child: AddTaskSheet(initialTask: initialTask),
+      ),
     );
   }
 
@@ -37,7 +43,15 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = context.read<TasksCubit>().state.currentDate;
+    final initialTask = widget.initialTask;
+    _selectedDate =
+        initialTask?.createdAt ?? context.read<TasksCubit>().state.currentDate;
+    if (initialTask != null) {
+      _titleController.text = initialTask.title;
+      _subtitleController.text = initialTask.subtitle ?? '';
+      _selectedTime = _parseTimeOfDay(initialTask.scheduledTime);
+      _reminderType = initialTask.reminderType ?? 'notification';
+    }
   }
 
   @override
@@ -80,7 +94,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             return Dialog(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: 20.w,
+                vertical: 24.h,
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28.r),
                 child: BackdropFilter(
@@ -91,9 +108,15 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [const Color(0xFF151918), AppColors.darkCardBg, AppColors.darkBackground],
+                        colors: [
+                          const Color(0xFF151918),
+                          AppColors.darkCardBg,
+                          AppColors.darkBackground,
+                        ],
                       ),
-                      border: Border.all(color: AppColors.darkBorder.withValues(alpha: 0.9)),
+                      border: Border.all(
+                        color: AppColors.darkBorder.withValues(alpha: 0.9),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.34),
@@ -122,8 +145,12 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    AppColors.accentGreen.withValues(alpha: 0.06),
-                                    AppColors.accentGreen.withValues(alpha: 0.018),
+                                    AppColors.accentGreen.withValues(
+                                      alpha: 0.06,
+                                    ),
+                                    AppColors.accentGreen.withValues(
+                                      alpha: 0.018,
+                                    ),
                                     Colors.transparent,
                                   ],
                                   stops: const [0.0, 0.4, 1.0],
@@ -143,58 +170,96 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Select date',
-                                          style: AppTextStyles(
-                                            context,
-                                          ).px12wMedium().copyWith(color: AppColors.darkTextMuted, letterSpacing: 0.8),
+                                          style: AppTextStyles(context)
+                                              .px12wMedium()
+                                              .copyWith(
+                                                color: AppColors.darkTextMuted,
+                                                letterSpacing: 0.8,
+                                              ),
                                         ),
                                         SizedBox(height: 8.h),
                                         Text(
-                                          DateFormat('EEE, MMM d').format(tempSelected),
-                                          style: AppTextStyles(
-                                            context,
-                                          ).px28wBold().copyWith(color: AppColors.darkTextPrimary, height: 1.05),
+                                          DateFormat(
+                                            'EEE, MMM d',
+                                          ).format(tempSelected),
+                                          style: AppTextStyles(context)
+                                              .px28wBold()
+                                              .copyWith(
+                                                color:
+                                                    AppColors.darkTextPrimary,
+                                                height: 1.05,
+                                              ),
                                         ),
                                         SizedBox(height: 6.h),
                                         Text(
-                                          DateFormat('MMMM yyyy').format(tempSelected),
-                                          style: AppTextStyles(
-                                            context,
-                                          ).px13wRegular().copyWith(color: AppColors.darkTextSecondary),
+                                          DateFormat(
+                                            'MMMM yyyy',
+                                          ).format(tempSelected),
+                                          style: AppTextStyles(context)
+                                              .px13wRegular()
+                                              .copyWith(
+                                                color:
+                                                    AppColors.darkTextSecondary,
+                                              ),
                                         ),
                                       ],
                                     ),
                                   ),
                                   SizedBox(width: 12.w),
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14.w,
+                                      vertical: 11.h,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.darkCardBg.withValues(alpha: 0.96),
+                                      color: AppColors.darkCardBg.withValues(
+                                        alpha: 0.96,
+                                      ),
                                       borderRadius: BorderRadius.circular(18.r),
                                       border: Border.all(
                                         color: isToday
-                                            ? AppColors.accentGreen.withValues(alpha: 0.18)
-                                            : AppColors.darkBorder.withValues(alpha: 0.9),
+                                            ? AppColors.accentGreen.withValues(
+                                                alpha: 0.18,
+                                              )
+                                            : AppColors.darkBorder.withValues(
+                                                alpha: 0.9,
+                                              ),
                                       ),
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Text(
-                                          isToday ? 'Today' : DateFormat('EEE').format(tempSelected),
-                                          style: AppTextStyles(context).px12wSemiBold().copyWith(
-                                            color: isToday ? AppColors.accentGreen : AppColors.darkTextSecondary,
-                                          ),
+                                          isToday
+                                              ? 'Today'
+                                              : DateFormat(
+                                                  'EEE',
+                                                ).format(tempSelected),
+                                          style: AppTextStyles(context)
+                                              .px12wSemiBold()
+                                              .copyWith(
+                                                color: isToday
+                                                    ? AppColors.accentGreen
+                                                    : AppColors
+                                                          .darkTextSecondary,
+                                              ),
                                         ),
                                         SizedBox(height: 4.h),
                                         Text(
-                                          DateFormat('d MMM').format(tempSelected),
-                                          style: AppTextStyles(
-                                            context,
-                                          ).px11wRegular().copyWith(color: AppColors.darkTextMuted),
+                                          DateFormat(
+                                            'd MMM',
+                                          ).format(tempSelected),
+                                          style: AppTextStyles(context)
+                                              .px11wRegular()
+                                              .copyWith(
+                                                color: AppColors.darkTextMuted,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -202,7 +267,12 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                 ],
                               ),
                               SizedBox(height: 18.h),
-                              Container(height: 1, color: AppColors.darkBorder.withValues(alpha: 0.82)),
+                              Container(
+                                height: 1,
+                                color: AppColors.darkBorder.withValues(
+                                  alpha: 0.82,
+                                ),
+                              ),
                               SizedBox(height: 8.h),
                               Theme(
                                 data: _buildCalendarTheme(context),
@@ -221,37 +291,59 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                 children: [
                                   Expanded(
                                     child: OutlinedButton(
-                                      onPressed: () => Navigator.of(context).pop(),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
                                       style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.darkTextSecondary,
-                                        side: BorderSide(color: AppColors.darkBorder),
+                                        foregroundColor:
+                                            AppColors.darkTextSecondary,
+                                        side: BorderSide(
+                                          color: AppColors.darkBorder,
+                                        ),
                                         minimumSize: Size.fromHeight(48.h),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16.r,
+                                          ),
+                                        ),
                                       ),
                                       child: Text(
-                                        MaterialLocalizations.of(context).cancelButtonLabel,
-                                        style: AppTextStyles(
+                                        MaterialLocalizations.of(
                                           context,
-                                        ).px14wMedium().copyWith(color: AppColors.darkTextSecondary),
+                                        ).cancelButtonLabel,
+                                        style: AppTextStyles(context)
+                                            .px14wMedium()
+                                            .copyWith(
+                                              color:
+                                                  AppColors.darkTextSecondary,
+                                            ),
                                       ),
                                     ),
                                   ),
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () => Navigator.of(context).pop(tempSelected),
+                                      onPressed: () => Navigator.of(
+                                        context,
+                                      ).pop(tempSelected),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.accentGreen,
-                                        foregroundColor: AppColors.darkBackground,
+                                        foregroundColor:
+                                            AppColors.darkBackground,
                                         minimumSize: Size.fromHeight(48.h),
                                         elevation: 0,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16.r,
+                                          ),
+                                        ),
                                       ),
                                       child: Text(
                                         'Choose date',
-                                        style: AppTextStyles(
-                                          context,
-                                        ).px14wBold().copyWith(color: AppColors.darkBackground),
+                                        style: AppTextStyles(context)
+                                            .px14wBold()
+                                            .copyWith(
+                                              color: AppColors.darkBackground,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -283,15 +375,27 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         surface: Colors.transparent,
         onSurface: AppColors.darkTextPrimary,
       ),
-      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: AppColors.darkTextSecondary)),
-      iconButtonTheme: IconButtonThemeData(style: IconButton.styleFrom(foregroundColor: AppColors.darkTextSecondary)),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.darkTextSecondary,
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: AppColors.darkTextSecondary,
+        ),
+      ),
       datePickerTheme: DatePickerThemeData(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         dividerColor: Colors.transparent,
-        weekdayStyle: AppTextStyles(context).px13wMedium().copyWith(color: AppColors.darkTextMuted),
-        dayStyle: AppTextStyles(context).px14wSemiBold().copyWith(color: AppColors.darkTextSecondary),
+        weekdayStyle: AppTextStyles(
+          context,
+        ).px13wMedium().copyWith(color: AppColors.darkTextMuted),
+        dayStyle: AppTextStyles(
+          context,
+        ).px14wSemiBold().copyWith(color: AppColors.darkTextSecondary),
         dayForegroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return AppColors.darkBackground;
@@ -319,9 +423,14 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           }
           return AppColors.accentGreen;
         }),
-        todayBorder: BorderSide(color: AppColors.accentGreen.withValues(alpha: 0.8), width: 1.4),
+        todayBorder: BorderSide(
+          color: AppColors.accentGreen.withValues(alpha: 0.8),
+          width: 1.4,
+        ),
         subHeaderForegroundColor: AppColors.darkTextSecondary,
-        yearStyle: AppTextStyles(context).px14wMedium().copyWith(color: AppColors.darkTextSecondary),
+        yearStyle: AppTextStyles(
+          context,
+        ).px14wMedium().copyWith(color: AppColors.darkTextSecondary),
         yearForegroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return AppColors.darkBackground;
@@ -365,11 +474,21 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: const [Color(0xFF151918), AppColors.darkCardBg, AppColors.darkBackground],
+                    colors: const [
+                      Color(0xFF151918),
+                      AppColors.darkCardBg,
+                      AppColors.darkBackground,
+                    ],
                   ),
-                  border: Border.all(color: AppColors.darkBorder.withValues(alpha: 0.9)),
+                  border: Border.all(
+                    color: AppColors.darkBorder.withValues(alpha: 0.9),
+                  ),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.34), blurRadius: 28, offset: const Offset(0, 14)),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.34),
+                      blurRadius: 28,
+                      offset: const Offset(0, 14),
+                    ),
                     BoxShadow(
                       color: AppColors.accentGreen.withValues(alpha: 0.05),
                       blurRadius: 24,
@@ -414,7 +533,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           initialTime: initialTime,
                           initialEntryMode: TimePickerEntryMode.dial,
                           helpText: 'Select time',
-                          cancelText: MaterialLocalizations.of(dialogContext).cancelButtonLabel,
+                          cancelText: MaterialLocalizations.of(
+                            dialogContext,
+                          ).cancelButtonLabel,
                           confirmText: 'Choose time',
                         ),
                       ),
@@ -445,33 +566,48 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
       ),
-      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: AppColors.darkTextSecondary)),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.darkTextSecondary,
+        ),
+      ),
       timePickerTheme: TimePickerThemeData(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
         padding: EdgeInsets.fromLTRB(6.w, 0, 6.w, 0),
-        helpTextStyle: AppTextStyles(
-          context,
-        ).px12wMedium().copyWith(color: AppColors.darkTextMuted, letterSpacing: 0.8),
+        helpTextStyle: AppTextStyles(context).px12wMedium().copyWith(
+          color: AppColors.darkTextMuted,
+          letterSpacing: 0.8,
+        ),
         hourMinuteShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18.r),
           side: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.9)),
         ),
         hourMinuteColor: AppColors.darkCardBg.withValues(alpha: 0.98),
-        hourMinuteTextStyle: AppTextStyles(context).px32wBold().copyWith(color: AppColors.darkTextPrimary),
+        hourMinuteTextStyle: AppTextStyles(
+          context,
+        ).px32wBold().copyWith(color: AppColors.darkTextPrimary),
         hourMinuteTextColor: AppColors.darkTextPrimary,
         dayPeriodShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
           side: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.9)),
         ),
-        dayPeriodBorderSide: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.9)),
+        dayPeriodBorderSide: BorderSide(
+          color: AppColors.darkBorder.withValues(alpha: 0.9),
+        ),
         dayPeriodColor: AppColors.darkCardBg.withValues(alpha: 0.98),
-        dayPeriodTextStyle: AppTextStyles(context).px16wBold().copyWith(color: AppColors.darkTextPrimary),
+        dayPeriodTextStyle: AppTextStyles(
+          context,
+        ).px16wBold().copyWith(color: AppColors.darkTextPrimary),
         dayPeriodTextColor: AppColors.darkTextPrimary,
         dialBackgroundColor: AppColors.darkSurface.withValues(alpha: 0.98),
         dialHandColor: AppColors.accentGreen,
-        dialTextStyle: AppTextStyles(context).px16wMedium().copyWith(color: AppColors.darkTextPrimary),
+        dialTextStyle: AppTextStyles(
+          context,
+        ).px16wMedium().copyWith(color: AppColors.darkTextPrimary),
         dialTextColor: AppColors.darkTextPrimary,
         entryModeIconColor: AppColors.accentGreen,
         cancelButtonStyle: TextButton.styleFrom(
@@ -490,6 +626,16 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  TimeOfDay? _parseTimeOfDay(String? hhMm) {
+    if (hhMm == null || hhMm.isEmpty) return null;
+    final parts = hhMm.split(':');
+    if (parts.length != 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
   void _submit() {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
@@ -502,26 +648,53 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       timeStr = '$h:$m';
     }
 
-    context.read<TasksCubit>().addTask(
-      title,
-      subtitle: subtitle.isNotEmpty ? subtitle : null,
-      date: _selectedDate,
-      scheduledTime: timeStr,
-      reminderType: timeStr != null ? _reminderType : null,
-    );
+    final cubit = context.read<TasksCubit>();
+    if (widget.initialTask != null) {
+      cubit.updateTask(
+        widget.initialTask!.id,
+        title: title,
+        subtitle: subtitle.isNotEmpty ? subtitle : null,
+        date: _selectedDate,
+        scheduledTime: timeStr,
+        reminderType: timeStr != null ? _reminderType : null,
+      );
+    } else {
+      cubit.addTask(
+        title,
+        subtitle: subtitle.isNotEmpty ? subtitle : null,
+        date: _selectedDate,
+        scheduledTime: timeStr,
+        reminderType: timeStr != null ? _reminderType : null,
+      );
+    }
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEditMode = widget.initialTask != null;
     final now = DateTime.now();
-    final isToday = _selectedDate.year == now.year && _selectedDate.month == now.month && _selectedDate.day == now.day;
-    final dateLabel = isToday ? 'Today' : DateFormat('EEE, MMM d').format(_selectedDate);
+    final isToday =
+        _selectedDate.year == now.year &&
+        _selectedDate.month == now.month &&
+        _selectedDate.day == now.day;
+    final dateLabel = isToday
+        ? 'Today'
+        : DateFormat('EEE, MMM d').format(_selectedDate);
 
-    final timeLabel = _selectedTime != null ? _selectedTime!.format(context) : 'Set time';
+    final timeLabel = _selectedTime != null
+        ? _selectedTime!.format(context)
+        : 'Set time';
+    final sheetTitle = isEditMode ? 'Edit Task' : t.home.add_task;
+    final sheetSubtitle = isEditMode
+        ? 'Update the details, time, or reminder for this task.'
+        : 'Add the task, then choose when it should surface.';
+    final submitLabel = isEditMode ? 'Save Changes' : t.home.add_task;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
         child: BackdropFilter(
@@ -538,9 +711,16 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   AppColors.darkBackground,
                 ],
               ),
-              border: Border.all(color: AppColors.darkBorder.withValues(alpha: 0.85), width: 1),
+              border: Border.all(
+                color: AppColors.darkBorder.withValues(alpha: 0.85),
+                width: 1,
+              ),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.36), blurRadius: 32, offset: const Offset(0, -14)),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.36),
+                  blurRadius: 32,
+                  offset: const Offset(0, -14),
+                ),
                 BoxShadow(
                   color: AppColors.accentGreen.withValues(alpha: 0.06),
                   blurRadius: 26,
@@ -619,17 +799,23 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  t.home.add_task,
-                                  style: AppTextStyles(
-                                    context,
-                                  ).px24wBold().copyWith(color: AppColors.darkTextPrimary, height: 1.08),
+                                  sheetTitle,
+                                  style: AppTextStyles(context)
+                                      .px24wBold()
+                                      .copyWith(
+                                        color: AppColors.darkTextPrimary,
+                                        height: 1.08,
+                                      ),
                                 ),
                                 SizedBox(height: 6.h),
                                 Text(
-                                  'Add the task, then choose when it should surface.',
-                                  style: AppTextStyles(
-                                    context,
-                                  ).px13wRegular().copyWith(color: AppColors.darkTextSecondary, height: 1.42),
+                                  sheetSubtitle,
+                                  style: AppTextStyles(context)
+                                      .px13wRegular()
+                                      .copyWith(
+                                        color: AppColors.darkTextSecondary,
+                                        height: 1.42,
+                                      ),
                                 ),
                               ],
                             ),
@@ -685,9 +871,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         SizedBox(height: 14.h),
                         Text(
                           'Reminder mode',
-                          style: AppTextStyles(
-                            context,
-                          ).px12wMedium().copyWith(color: AppColors.darkTextMuted, letterSpacing: 1.2),
+                          style: AppTextStyles(context).px12wMedium().copyWith(
+                            color: AppColors.darkTextMuted,
+                            letterSpacing: 1.2,
+                          ),
                         ),
                         SizedBox(height: 10.h),
                         Row(
@@ -718,7 +905,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           borderRadius: BorderRadius.circular(18.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.accentGreen.withValues(alpha: 0.22),
+                              color: AppColors.accentGreen.withValues(
+                                alpha: 0.22,
+                              ),
                               blurRadius: 24,
                               spreadRadius: -8,
                               offset: const Offset(0, 10),
@@ -730,12 +919,16 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.accentGreen,
                             foregroundColor: AppColors.darkBackground,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.r)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18.r),
+                            ),
                             elevation: 0,
                           ),
                           child: Text(
-                            t.home.add_task,
-                            style: AppTextStyles(context).px16wBold().copyWith(color: AppColors.darkBackground),
+                            submitLabel,
+                            style: AppTextStyles(context).px16wBold().copyWith(
+                              color: AppColors.darkBackground,
+                            ),
                           ),
                         ),
                       ),
@@ -750,7 +943,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     );
   }
 
-  Widget _buildReminderOption({required IconData icon, required String label, required String value}) {
+  Widget _buildReminderOption({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     final isSelected = _reminderType == value;
     return GestureDetector(
       onTap: () => setState(() => _reminderType = value),
@@ -793,15 +990,23 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       : AppColors.darkBorder.withValues(alpha: 0.9),
                 ),
               ),
-              child: Icon(icon, color: isSelected ? AppColors.accentGreen : AppColors.darkTextMuted, size: 18.sp),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? AppColors.accentGreen
+                    : AppColors.darkTextMuted,
+                size: 18.sp,
+              ),
             ),
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 label,
-                style: AppTextStyles(
-                  context,
-                ).px14wMedium().copyWith(color: isSelected ? AppColors.darkTextPrimary : AppColors.darkTextSecondary),
+                style: AppTextStyles(context).px14wMedium().copyWith(
+                  color: isSelected
+                      ? AppColors.darkTextPrimary
+                      : AppColors.darkTextSecondary,
+                ),
               ),
             ),
             AnimatedOpacity(
@@ -813,9 +1018,15 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.accentGreen.withValues(alpha: 0.16),
-                  border: Border.all(color: AppColors.accentGreen.withValues(alpha: 0.24)),
+                  border: Border.all(
+                    color: AppColors.accentGreen.withValues(alpha: 0.24),
+                  ),
                 ),
-                child: Icon(Icons.check_rounded, color: AppColors.accentGreen, size: 14.sp),
+                child: Icon(
+                  Icons.check_rounded,
+                  color: AppColors.accentGreen,
+                  size: 14.sp,
+                ),
               ),
             ),
           ],
@@ -870,12 +1081,16 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         ? AppColors.darkBackground.withValues(alpha: 0.54)
                         : AppColors.accentGreen.withValues(alpha: 0.14),
                     border: Border.all(
-                      color: isPlaceholder ? AppColors.darkBorder : AppColors.accentGreen.withValues(alpha: 0.18),
+                      color: isPlaceholder
+                          ? AppColors.darkBorder
+                          : AppColors.accentGreen.withValues(alpha: 0.18),
                     ),
                   ),
                   child: Icon(
                     icon,
-                    color: isPlaceholder ? AppColors.darkTextMuted : AppColors.accentGreen,
+                    color: isPlaceholder
+                        ? AppColors.darkTextMuted
+                        : AppColors.accentGreen,
                     size: 17.sp,
                   ),
                 ),
@@ -883,7 +1098,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 Text(
                   title,
                   style: AppTextStyles(context).px12wMedium().copyWith(
-                    color: isPlaceholder ? AppColors.darkTextMuted : AppColors.accentGreen.withValues(alpha: 0.9),
+                    color: isPlaceholder
+                        ? AppColors.darkTextMuted
+                        : AppColors.accentGreen.withValues(alpha: 0.9),
                     letterSpacing: 0.6,
                   ),
                 ),
@@ -892,9 +1109,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             SizedBox(height: 14.h),
             Text(
               label,
-              style: AppTextStyles(
-                context,
-              ).px15wSemiBold().copyWith(color: isPlaceholder ? AppColors.darkTextMuted : AppColors.darkTextPrimary),
+              style: AppTextStyles(context).px15wSemiBold().copyWith(
+                color: isPlaceholder
+                    ? AppColors.darkTextMuted
+                    : AppColors.darkTextPrimary,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ],
@@ -921,13 +1140,17 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           Text(
             dateLabel,
             style: AppTextStyles(context).px12wSemiBold().copyWith(
-              color: _selectedTime != null ? AppColors.accentGreen : AppColors.darkTextSecondary,
+              color: _selectedTime != null
+                  ? AppColors.accentGreen
+                  : AppColors.darkTextSecondary,
             ),
           ),
           SizedBox(height: 4.h),
           Text(
             _selectedTime != null ? timeLabel : 'No time yet',
-            style: AppTextStyles(context).px11wRegular().copyWith(color: AppColors.darkTextSecondary),
+            style: AppTextStyles(
+              context,
+            ).px11wRegular().copyWith(color: AppColors.darkTextSecondary),
           ),
         ],
       ),
@@ -947,14 +1170,22 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       focusNode: focusNode,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
-      style: AppTextStyles(context).px15wRegular().copyWith(color: AppColors.darkTextPrimary),
+      style: AppTextStyles(
+        context,
+      ).px15wRegular().copyWith(color: AppColors.darkTextPrimary),
       cursorColor: AppColors.accentGreen,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles(context).px15wRegular().copyWith(color: AppColors.darkTextMuted),
+        hintStyle: AppTextStyles(
+          context,
+        ).px15wRegular().copyWith(color: AppColors.darkTextMuted),
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 6.w, right: 4.w),
-          child: Icon(icon, color: AppColors.accentGreen.withValues(alpha: 0.78), size: 20.sp),
+          child: Icon(
+            icon,
+            color: AppColors.accentGreen.withValues(alpha: 0.78),
+            size: 20.sp,
+          ),
         ),
         prefixIconConstraints: BoxConstraints(minWidth: 42.w, minHeight: 20.h),
         filled: true,
@@ -962,15 +1193,22 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18.r),
-          borderSide: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.95)),
+          borderSide: BorderSide(
+            color: AppColors.darkBorder.withValues(alpha: 0.95),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18.r),
-          borderSide: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.95)),
+          borderSide: BorderSide(
+            color: AppColors.darkBorder.withValues(alpha: 0.95),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18.r),
-          borderSide: BorderSide(color: AppColors.accentGreen.withValues(alpha: 0.42), width: 1.2),
+          borderSide: BorderSide(
+            color: AppColors.accentGreen.withValues(alpha: 0.42),
+            width: 1.2,
+          ),
         ),
       ),
     );

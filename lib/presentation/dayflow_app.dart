@@ -21,6 +21,19 @@ import 'package:dayflow/services/widget_data_sync.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+Future<bool> syncAndroidAlarmActionsAndWidget() async {
+  if (defaultTargetPlatform != TargetPlatform.android) return false;
+
+  final changed = await getIt<NotificationService>().syncPendingAndroidAlarmActions(
+    getIt<GetTasks>(),
+    getIt<SaveTasks>(),
+  );
+  if (changed) {
+    await WidgetDataSync.sync();
+  }
+  return changed;
+}
+
 class DayFlowAppProvided extends StatelessWidget {
   const DayFlowAppProvided({super.key});
 
@@ -74,13 +87,8 @@ class _DayFlowAppState extends State<DayFlowApp> {
 
   late final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver(
     onResumed: () async {
-      WidgetDataSync.sync();
       if (defaultTargetPlatform != TargetPlatform.android || !mounted) return;
-      final changed = await getIt<NotificationService>()
-          .syncPendingAndroidAlarmActions(
-            getIt<GetTasks>(),
-            getIt<SaveTasks>(),
-          );
+      final changed = await syncAndroidAlarmActionsAndWidget();
       if (!changed || !mounted) return;
       context.read<TasksCubit>().loadTasks();
     },

@@ -13,6 +13,7 @@ class TaskCard extends StatelessWidget {
   final TemporalState temporalState;
   final bool showDateBadge;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
 
   const TaskCard({
     super.key,
@@ -20,6 +21,7 @@ class TaskCard extends StatelessWidget {
     required this.temporalState,
     this.showDateBadge = false,
     this.onTap,
+    this.onEdit,
   });
 
   @override
@@ -27,14 +29,39 @@ class TaskCard extends StatelessWidget {
     final isFuture = temporalState == TemporalState.future;
     final isPast = temporalState == TemporalState.past;
     final cardOpacity = isPast ? 0.65 : 1.0;
+    final canEdit = !task.isDone;
 
     return Opacity(
       opacity: cardOpacity,
       child: Dismissible(
         key: Key(task.id),
-        direction: DismissDirection.endToStart,
+        direction: canEdit
+            ? DismissDirection.horizontal
+            : DismissDirection.endToStart,
+        confirmDismiss: (direction) async {
+          if (direction == DismissDirection.startToEnd) {
+            onEdit?.call();
+            return false;
+          }
+          return true;
+        },
         onDismissed: (_) => context.read<TasksCubit>().deleteTask(task.id),
-        background: Container(
+        background: canEdit
+            ? Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.only(left: 20.w),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGreen.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+                child: Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.accentGreen,
+                  size: 22.sp,
+                ),
+              )
+            : const SizedBox.shrink(),
+        secondaryBackground: Container(
           alignment: Alignment.centerRight,
           padding: EdgeInsets.only(right: 20.w),
           decoration: BoxDecoration(

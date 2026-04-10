@@ -44,10 +44,7 @@ class _HomePageState extends State<HomePage> {
         final upcomingTasks = state.upcomingTasks;
         final isEmptyScrollableState =
             (temporal != TemporalState.today && filteredTasks.isEmpty) ||
-            (temporal == TemporalState.today &&
-                filteredTasks.isEmpty &&
-                overdueTasks.isEmpty &&
-                upcomingTasks.isEmpty);
+            (temporal == TemporalState.today && filteredTasks.isEmpty && overdueTasks.isEmpty && upcomingTasks.isEmpty);
 
         return Scaffold(
           backgroundColor: AppColors.darkBackground,
@@ -143,22 +140,35 @@ class _HomePageState extends State<HomePage> {
     required List<TaskModel> overdueTasks,
     required List<TaskModel> upcomingTasks,
   }) {
+    final greetingTaskGap = SliverToBoxAdapter(child: SizedBox(height: 15.h));
+
     if (temporal != TemporalState.today) {
       if (filteredTasks.isEmpty) {
-        return [_buildEmptySliver(context, temporal), SliverToBoxAdapter(child: SizedBox(height: 100.h))];
+        return [
+          greetingTaskGap,
+          _buildEmptySliver(context, temporal),
+          SliverToBoxAdapter(child: SizedBox(height: 100.h)),
+        ];
       }
 
       return [
+        greetingTaskGap,
         ..._buildTaskListSliver(context, tasks: filteredTasks, temporalState: temporal),
         SliverToBoxAdapter(child: SizedBox(height: 100.h)),
       ];
     }
 
     if (filteredTasks.isEmpty && overdueTasks.isEmpty && upcomingTasks.isEmpty) {
-      return [_buildEmptySliver(context, temporal), SliverToBoxAdapter(child: SizedBox(height: 100.h))];
+      return [
+        greetingTaskGap,
+        _buildEmptySliver(context, temporal),
+        SliverToBoxAdapter(child: SizedBox(height: 100.h)),
+      ];
     }
 
     final slivers = <Widget>[];
+
+    slivers.add(greetingTaskGap);
 
     if (filteredTasks.isEmpty) {
       slivers.add(
@@ -247,6 +257,7 @@ class _HomePageState extends State<HomePage> {
                         temporalState: temporalState,
                         showDateBadge: showDateBadge,
                         onTap: onTaskTap != null ? () => onTaskTap(task) : null,
+                        onEdit: () => AddTaskSheet.show(context, initialTask: task),
                       )
                       .animate()
                       .fadeIn(
