@@ -19,7 +19,7 @@ class NotificationService {
   static const _nativeAlarmChannel = MethodChannel('dayflow/native_alarm');
 
   Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@drawable/ic_stat_notification');
 
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -67,6 +67,8 @@ class NotificationService {
         _notifChannelId,
         _notifChannelName,
         channelDescription: _notifChannelDesc,
+        icon: 'ic_stat_notification',
+        color: Color(0xFF1DE367),
         importance: Importance.max,
         priority: Priority.max,
         category: AndroidNotificationCategory.reminder,

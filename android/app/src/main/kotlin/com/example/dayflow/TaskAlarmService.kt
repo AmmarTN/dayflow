@@ -299,7 +299,8 @@ class TaskAlarmService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setColor(0xFF1DE367.toInt())
             .setContentTitle(record.title)
             .setContentText(record.subtitle ?: "")
             .setCategory(NotificationCompat.CATEGORY_ALARM)
